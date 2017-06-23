@@ -1,6 +1,6 @@
 # imagerecognition
 
-note/script for IPMD project  
-main package: opencv, dlib  
+notes/scripts for IPMD project  
+main package used: opencv, dlib  
 
 
