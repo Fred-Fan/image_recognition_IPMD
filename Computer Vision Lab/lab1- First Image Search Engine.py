@@ -39,8 +39,6 @@ index = {}
 desc = RGBHistogram([8, 8, 8])
 
 
-# In[8]:
-
 for imagePath in glob.glob("dataset/lab1/*.jpeg"):
     # extract our unique image ID (i.e. the filename)
     k = imagePath[imagePath.rfind("\\")+1:imagePath.rfind("j")-1]
@@ -53,12 +51,9 @@ for imagePath in glob.glob("dataset/lab1/*.jpeg"):
     index[k] = features
 
 
-# In[9]:
 
 pickle.dump(index, open('index.dmp', 'wb'))
 
-
-# In[10]:
 
 # import the necessary packages
 import numpy as np
