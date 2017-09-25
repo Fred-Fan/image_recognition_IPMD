@@ -6,7 +6,8 @@ import os
 import cv2
 
 def savepic(inputlist):
-    target = np.asarray(np.split(np.asarray(inputlist[0][1]), 48))
+    #target = np.asarray(np.split(np.asarray(inputlist[0][1]), 48))
+    target = np.asarray(inputlist[0][1]).reshape(48, 48)
     # print(image)
     print(inputlist[1]+1, os.getpid())
     filename = "images/No." + str(inputlist[1] + 1) + "-" + inputlist[0][0] + "-" + inputlist[0][2] + ".png"
