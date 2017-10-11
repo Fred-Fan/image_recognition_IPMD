@@ -6,10 +6,11 @@ import os
 
 label_list = []
 id_list = []
-for f in glob.glob("D:\\Downloads\\kaggle\\*.*"):
+for f in glob.glob("E:\\IPMD\\kaggle\\*.*"):
     try:
         head, tail = os.path.split(f)
-        file_id = int(re.findall(r'\d+', tail)[0]) - 1
+        #file_id = int(re.findall(r'\d+', tail)[0]) - 1
+        file_id = int(re.findall(r'\d+', tail)[0])
         emotion = re.findall(r'\-(\w+)\-', f)[0]
         label_list.append([file_id, emotion])
         id_list.append(file_id)
