@@ -9,6 +9,8 @@ import multiprocessing
 from multiprocessing import Pool
 import glob
 import os
+import pandas as pd
+import re
 
 
 def conversion(f):
@@ -23,7 +25,6 @@ def conversion(f):
 
     # detect faces in the grayscale image
     rects = detector(gray, 1)
-
     for (i, rect) in enumerate(rects):
         # determine the facial landmarks for the face region, then
         # convert the landmark (x, y)-coordinates to a NumPy array
@@ -36,6 +37,7 @@ def conversion(f):
         for (i, rect) in enumerate(rects):
             # determine the facial landmarks for the face region, then
             # convert the landmark (x, y)-coordinates to a NumPy array
+            print(2)
             shape = predictor(gray, rect)
             shape = face_utils.shape_to_np(shape)
             for (name, (i, j)) in face_utils.FACIAL_LANDMARKS_IDXS.items():
@@ -48,7 +50,6 @@ def conversion(f):
             right_choose = max(right)
             up_choose = min(up)
             bottom_choose = max(bottom)
-
             if (right_choose-left_choose)>=(bottom_choose-up_choose): 
                 diff = round(((right_choose-left_choose)-(bottom_choose-up_choose))/2)
                 roi = image[int(up_choose-10-diff/2):int(bottom_choose+10+diff/2), int(left_choose-10):int( right_choose+10)]
@@ -58,11 +59,13 @@ def conversion(f):
                 roi = image[int(up_choose-10):int(bottom_choose+10), int(left_choose-10-diff/2):int(right_choose+10+        diff/2)]
             #print(x,x+w,y,y+h )
             #roi = image[y:y + h, x:x + w]
-            roi = imutils.resize(roi, width=48)
+            roi = imutils.resize(roi, width=96)
             output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
             outfile = 'output/'+tail
-            print(outfile)
             cv2.imwrite(outfile,output)
+            output = output.flatten()
+            #print(len(output))
+            return output
 
 
 
@@ -70,13 +73,22 @@ def main():
     process_number = 1
 
     #pool = Pool(processes=process_number)
-
+    output_array = []
     for f in glob.glob('images/*.*'):
         print(f)
+        head, tail = os.path.split(f)
+        photo_id = re.findall(r'\d+', tail)[0]
+        emotion = re.findall(r' (\w+).', tail)[0]
         #result = pool.apply_async(conversion, (f,))
         #result.get()
-        conversion(f)
+        try:
+            temp_output = conversion(f)
+            output_array.append([photo_id, temp_output, emotion])
+        except:
+            print('error')
     #pool.close()
+    output_pd = pd.DataFrame(output_array, columns =['id', 'pixels', 'emotion'])
+    output_pd.to_csv('temp.csv')
 
 
 if __name__ == "__main__":
