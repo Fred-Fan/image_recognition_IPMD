@@ -2,7 +2,7 @@ import csv
 import pickle
 
 
-def get_user_list(filename='fer2013.csv'):
+def get_user_list(filename='test.csv'):
     """return list of user tuple. e.g. ('001,', 'demo1'), ('002,', 'demo2')]"""
     user_list = []
     category_dict = {'0':'Angry', '1':'Disgust', '2':'Fear', '3':'Happy', '4':'Sad', '5':'Surprise', '6':'Neutral'}

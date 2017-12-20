@@ -136,10 +136,8 @@ def conversion(f):
                 bottom = max(bottom_list)
                 left, right, up, bottom = firstmodify(left, right, up, bottom)
                 left, right, up, bottom = ifoverborder(left, right, up, bottom, width, height)
-        
                 left, right, up, bottom = finalmodify(left, right, up, bottom)
                 #print(left, right, up, bottom)
-        
                 roi = image[up:bottom, left:right]
                 #roi = image[y:y + h, x:x + w]
                 roi = cv2.resize(roi, (96,96), interpolation = cv2.INTER_AREA)
@@ -149,15 +147,16 @@ def conversion(f):
                 output = output.flatten()
                 #print(len(output))
                 return output
-        
 
 
 def main():
-    process_number = 1
-
+    # set mulit-process number, equal to the number of cores
+    # process_number = 1
+    filepath = input("Filepath: ")
+    error_file = ''
     #pool = Pool(processes=process_number)
     output_array = []
-    for f in glob.glob('all/*.*'):
+    for f in glob.glob(filepath + '/*.*'):
         print(f)
         head, tail = os.path.split(f)
         photo_id = re.findall(r'\d+', tail)[0]
@@ -166,14 +165,21 @@ def main():
         #result.get()
         try:
             temp_output = conversion(f)
-            output_array.append([photo_id, temp_output, emotion])
+            output_array.append([photo_id, temp_output, emotion, tail])
+            # if cannot convert, temp_output == None
+            if temp_output is None:
+                error_file += f + ': fail to find the front face\n'
         except:
+            error_file += f + ': filename\'s format issue\n'
             print('error')
     #pool.close()
-    output_pd = pd.DataFrame(output_array, columns =['id', 'pixels', 'emotion'])
-    #output_pd.to_csv('temp.csv')
-    with open('temp.pd', 'wb') as fout:
+    output_pd = pd.DataFrame(output_array, columns =['id', 'pixels', 'emotion', 'original_file'])
+
+    with open('pixel.pd', 'wb') as fout:
         pickle.dump(output_pd, fout)
+    with open('error.txt', 'w') as fout:
+        fout.write(error_file)
+
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()  # must run for windows
