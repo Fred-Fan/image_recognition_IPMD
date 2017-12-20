@@ -9,8 +9,8 @@ import os
 def resize(inputlist):
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
-    r = 418.0 / image.shape[1]
-    dim = (418, int(image.shape[0] * r))
+    r = 96.0 / image.shape[1]
+    dim = (96, int(image.shape[0] * r))
     resized = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
     filepath = os.path.join(inputlist[1], tail)
     cv2.imwrite(filepath, resized)
