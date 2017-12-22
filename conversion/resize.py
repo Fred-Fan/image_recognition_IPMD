@@ -20,7 +20,10 @@ def resize(inputlist):
 def cropped(inputlist):
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
-    cropped = image[65:483, 162:580]
+    # 723*512
+    #cropped = image[65:483, 162:580]
+    # 640*480
+    cropped = image[59:426, 144:513]
     filepath = os.path.join(inputlist[1], tail)
     cv2.imwrite(filepath, cropped)
     print(filepath)
