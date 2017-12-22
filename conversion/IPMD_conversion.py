@@ -144,6 +144,7 @@ def conversion(f):
                 output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                 outfile = 'output/'+tail
                 cv2.imwrite(outfile,output)
+                # change (96,96) to (1, 96*96)
                 output = output.flatten()
                 #print(len(output))
                 return output
