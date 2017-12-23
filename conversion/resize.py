@@ -23,7 +23,7 @@ def cropped(inputlist):
     # 723*512
     #cropped = image[65:483, 162:580]
     # 640*480
-    cropped = image[59:426, 144:513]
+    cropped = image[60:426, 146:512]
     filepath = os.path.join(inputlist[1], tail)
     cv2.imwrite(filepath, cropped)
     print(filepath)
