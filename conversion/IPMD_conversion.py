@@ -91,7 +91,6 @@ def finalmodify(left, right, up, bottom):
     return left, right, up, bottom
 
 
-
 def conversion(f):
     head, tail = os.path.split(f)
 
@@ -154,14 +153,25 @@ def main():
     # set mulit-process number, equal to the number of cores
     # process_number = 1
     filepath = input("Filepath: ")
+    start_number = int(input("start_id:"))
     error_file = ''
     #pool = Pool(processes=process_number)
     output_array = []
-    for f in glob.glob(filepath + '/*.*'):
-        print(f)
+    for f in glob.glob(filepath + '/**/*.*', recursive=True):
+        #print(f)
+        print(str(start_number))
         head, tail = os.path.split(f)
-        photo_id = re.findall(r'\d+', tail)[0]
-        emotion = re.findall(r' (\w+).', tail)[0]
+        if re.search(r'^\d+ \w+.\w+$', tail) is not None:
+        # for standard
+            photo_id = re.findall(r'\d+', tail)[0]
+        else:
+        # for non standard
+            photo_id = str(start_number)
+        start_number += 1
+        try:
+            emotion = re.findall(r' ([A-Za-z]+)\.', tail)[0]
+        except IndexError:
+            emotion = 'Need to check'
         #result = pool.apply_async(conversion, (f,))
         #result.get()
         try:
