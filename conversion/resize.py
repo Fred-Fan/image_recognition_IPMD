@@ -9,8 +9,9 @@ import os
 def resize(inputlist):
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
-    r = 96.0 / image.shape[1]
-    dim = (96, int(image.shape[0] * r))
+    #r = 96.0 / image.shape[1]
+    #dim = (96, int(image.shape[0] * r))
+    dim = (96,96)
     resized = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
     filepath = os.path.join(inputlist[1], tail)
     cv2.imwrite(filepath, resized)
@@ -21,9 +22,9 @@ def cropped(inputlist):
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
     # 723*512
-    #cropped = image[65:483, 162:580]
+    cropped = image[65:483, 162:580]
     # 640*480
-    cropped = image[60:426, 146:512]
+    #cropped = image[60:426, 146:512]
     filepath = os.path.join(inputlist[1], tail)
     cv2.imwrite(filepath, cropped)
     print(filepath)
