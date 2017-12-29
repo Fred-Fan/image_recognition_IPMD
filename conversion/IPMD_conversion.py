@@ -157,7 +157,8 @@ def main():
     error_file = ''
     #pool = Pool(processes=process_number)
     output_array = []
-    for f in glob.glob(filepath + '/**/*.*', recursive=True):
+    #for f in glob.glob(filepath + '/**/*.*', recursive=True):
+    for f in glob.glob(filepath + '/*.*'):
         #print(f)
         print(str(start_number))
         head, tail = os.path.split(f)
