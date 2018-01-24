@@ -155,6 +155,7 @@ def main():
     filepath = input("Filepath: ")
     start_number = int(input("start_id:"))
     error_file = ''
+    os.mkdir('output')
     #pool = Pool(processes=process_number)
     output_array = []
     for f in glob.glob(filepath + '/**/*.*', recursive=True):
