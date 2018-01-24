@@ -157,8 +157,8 @@ def main():
     error_file = ''
     #pool = Pool(processes=process_number)
     output_array = []
-    #for f in glob.glob(filepath + '/**/*.*', recursive=True):
-    for f in glob.glob(filepath + '/*.*'):
+    for f in glob.glob(filepath + '/**/*.*', recursive=True):
+    #for f in glob.glob(filepath + '/*.*'):
         #print(f)
         print(str(start_number))
         head, tail = os.path.split(f)
@@ -182,7 +182,7 @@ def main():
             if temp_output is None:
                 error_file += f + ': fail to find the front face\n'
         except:
-            error_file += f + ': filename\'s format issue\n'
+            error_file += f + ': fail to find the front face\n'
             print('error')
     #pool.close()
     output_pd = pd.DataFrame(output_array, columns =['id', 'pixels', 'emotion', 'original_file'])
