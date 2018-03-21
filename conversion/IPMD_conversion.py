@@ -178,7 +178,7 @@ def main():
         #result.get()
         try:
             temp_output = conversion(f)
-            output_array.append([photo_id, temp_output, emotion, tail])
+            output_array.append([photo_id, temp_output, emotion.strip().title(), tail])
             # if cannot convert, temp_output == None
             if temp_output is None:
                 error_file += f + ': fail to find the front face\n'
