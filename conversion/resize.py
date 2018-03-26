@@ -7,6 +7,18 @@ import os
 
 
 def resize(inputlist):
+    """
+    This function is to resize images.
+
+    Args:
+        inputlist[0](str): The input path of the image.
+        inputlist[1](str): The output path of the image.
+
+    Returns:
+        None
+        save the resized image into the output directory
+
+    """
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
     #r = 96.0 / image.shape[1]
@@ -19,6 +31,18 @@ def resize(inputlist):
 
 
 def cropped(inputlist):
+    """
+    This function is to crop images.
+
+    Args:
+        inputlist[0](str): The input path of the image.
+        inputlist[1](str): The output path of the image.
+
+    Returns:
+        None
+        save the cropped image into the output directory
+
+    """
     head, tail = os.path.split(inputlist[0])
     image = cv2.imread(inputlist[0])
     # 723*512
@@ -31,6 +55,10 @@ def cropped(inputlist):
 
 
 def main():
+    """
+    This function is to take the command line and then proccess the images.
+    
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=True,
                     help="Path to the directory that contains the images.")
@@ -58,8 +86,10 @@ def main():
     pool = Pool(processes=process_number)
 
     if args.mode == '1':
+        #resize all the images whose path name matches the 'inputdir'.
         results = [pool.apply_async(resize, ([f, outputpath],)) for f in glob.glob(inputdir)]
     elif args.mode == '2':
+        #crop all the images whose path name matches the 'inputdir'.
         results = [pool.apply_async(cropped, ([f, outputpath],)) for f in glob.glob(inputdir)]
     else:
         print("Wrong mode.")

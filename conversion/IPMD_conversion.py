@@ -17,32 +17,34 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 
-def firstmodify(left, right, up, bottom):
+def firstmodify(left, right, up, bottom, margin_perc):
     if (right-left)>=(bottom-up):
+        margin = int((right-left)*margin_perc/100)
         diff = (right-left)-(bottom-up)
         if diff%2 == 0:
-            left = int(left-10)
-            right = int(right+10)
-            up = int(up-10-diff/2)
-            bottom = int(bottom+10+diff/2)
+            left = int(left-margin)
+            right = int(right+margin)
+            up = int(up-margin-diff)
+            bottom = int(bottom+margin)
 
         else:
-            left = int(left-10)
-            right = int(right+10)
-            up = int(up-10-(diff/2+0.5))
-            bottom = int(bottom+10+(diff/2-0.5))
+            left = int(left-margin)
+            right = int(right+margin)
+            up = int(up-margin-diff)
+            bottom = int(bottom+margin)
     else:
+        margin = int((bottom-up)*margin_perc/100)
         diff = (bottom-up)-(right-left)
         if diff%2 == 0:
-            left = int(left-10-diff/2)
-            right = int(right+10+diff/2)
-            up = int(up-10)
-            bottom = int(bottom+10)
+            left = int(left-margin-diff/2)
+            right = int(right+margin+diff/2)
+            up = int(up-margin)
+            bottom = int(bottom+margin)
         else:
-            left = int(left-10-(diff/2+0.5))
-            right = int(right+10+(diff/2-0.5))
-            up = int(up-10)
-            bottom = int(bottom+10)
+            left = int(left-margin-(diff/2+0.5))
+            right = int(right+margin+(diff/2-0.5))
+            up = int(up-margin)
+            bottom = int(bottom+margin)
 
     return left, right, up, bottom
 
@@ -75,19 +77,31 @@ def finalmodify(left, right, up, bottom):
     if right - left > bottom - up:
         diff = (right-left)-(bottom-up)
         if diff%2 == 0:
-            up = int(up+diff/2)
-            bottom = int(bottom-diff/2)
-        else:
-            up = int(up+(diff/2-0.5))
-            bottom = int(bottom-(diff/2-0.5))
-    else:
-        diff = (bottom-up)-(right-left)
-        if diff%2 == 0:
             left = int(left+diff/2)
             right = int(right-diff/2)
         else:
             left = int(left+(diff/2+0.5))
             right = int(right-(diff/2+0.5))
+        # if diff%2 == 0:
+            # up = int(up+diff/2)
+            # bottom = int(bottom-diff/2)
+        #else:
+            #up = int(up+(diff/2-0.5))
+            #bottom = int(bottom-(diff/2-0.5))
+    else:
+        diff = (bottom-up)-(right-left)
+        #if diff%2 == 0:
+            #left = int(left+diff/2)
+            #right = int(right-diff/2)
+        #else:
+            #left = int(left+(diff/2+0.5))
+            #right = int(right-(diff/2+0.5))
+        if diff%2 == 0:
+            up = int(up+diff/2)
+            bottom = int(bottom-diff/2)
+        else:
+            up = int(up+(diff/2-0.5))
+            bottom = int(bottom-(diff/2-0.5))
     return left, right, up, bottom
 
 
@@ -97,7 +111,7 @@ def conversion(f):
     # load the input image, resize it, and convert it to grayscale
     image = cv2.imread(f)
     height, width = image.shape[:2]
-    for new_width in range(width, 100, -10):
+    for new_width in range(width, 100, -5):
         image = imutils.resize(image, width=new_width)
     
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -133,13 +147,13 @@ def conversion(f):
                 right = max(right_list)
                 up = min(up_list)
                 bottom = max(bottom_list)
-                left, right, up, bottom = firstmodify(left, right, up, bottom)
+                left, right, up, bottom = firstmodify(left, right, up, bottom, 30)
                 left, right, up, bottom = ifoverborder(left, right, up, bottom, width, height)
                 left, right, up, bottom = finalmodify(left, right, up, bottom)
                 #print(left, right, up, bottom)
                 roi = image[up:bottom, left:right]
                 #roi = image[y:y + h, x:x + w]
-                roi = cv2.resize(roi, (96,96), interpolation = cv2.INTER_AREA)
+                roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
                 output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                 outfile = 'output/'+tail
                 cv2.imwrite(outfile,output)
