@@ -17,34 +17,32 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 
-def firstmodify(left, right, up, bottom, margin_perc):
+def firstmodify(left, right, up, bottom):
     if (right-left)>=(bottom-up):
-        margin = int((right-left)*margin_perc/100)
         diff = (right-left)-(bottom-up)
         if diff%2 == 0:
-            left = int(left-margin)
-            right = int(right+margin)
-            up = int(up-margin-diff)
-            bottom = int(bottom+margin)
+            left = int(left-10)
+            right = int(right+10)
+            up = int(up-10-diff/2)
+            bottom = int(bottom+10+diff/2)
 
         else:
-            left = int(left-margin)
-            right = int(right+margin)
-            up = int(up-margin-diff)
-            bottom = int(bottom+margin)
+            left = int(left-10)
+            right = int(right+10)
+            up = int(up-10-(diff/2+0.5))
+            bottom = int(bottom+10+(diff/2-0.5))
     else:
-        margin = int((bottom-up)*margin_perc/100)
         diff = (bottom-up)-(right-left)
         if diff%2 == 0:
-            left = int(left-margin-diff/2)
-            right = int(right+margin+diff/2)
-            up = int(up-margin)
-            bottom = int(bottom+margin)
+            left = int(left-10-diff/2)
+            right = int(right+10+diff/2)
+            up = int(up-10)
+            bottom = int(bottom+10)
         else:
-            left = int(left-margin-(diff/2+0.5))
-            right = int(right+margin+(diff/2-0.5))
-            up = int(up-margin)
-            bottom = int(bottom+margin)
+            left = int(left-10-(diff/2+0.5))
+            right = int(right+10+(diff/2-0.5))
+            up = int(up-10)
+            bottom = int(bottom+10)
 
     return left, right, up, bottom
 
@@ -74,44 +72,33 @@ def ifoverborder(left, right, up, bottom, width, height):
     return left, right, up, bottom
 
 def finalmodify(left, right, up, bottom):
-    if right - left > bottom - up:
+    #print(left, right, up, bottom)
+    if right - left < bottom - up:
+        diff = (bottom-up)-(right-left)
+        if diff%2 == 0:
+            up = int(up+diff/2)
+            bottom = int(bottom-diff/2)
+        else:
+            up = int(up+diff/2-0.5)
+            bottom = int(bottom-diff/2-0.5)
+    else:
         diff = (right-left)-(bottom-up)
         if diff%2 == 0:
             left = int(left+diff/2)
             right = int(right-diff/2)
         else:
-            left = int(left+(diff/2+0.5))
-            right = int(right-(diff/2+0.5))
-        # if diff%2 == 0:
-            # up = int(up+diff/2)
-            # bottom = int(bottom-diff/2)
-        #else:
-            #up = int(up+(diff/2-0.5))
-            #bottom = int(bottom-(diff/2-0.5))
-    else:
-        diff = (bottom-up)-(right-left)
-        #if diff%2 == 0:
-            #left = int(left+diff/2)
-            #right = int(right-diff/2)
-        #else:
-            #left = int(left+(diff/2+0.5))
-            #right = int(right-(diff/2+0.5))
-        if diff%2 == 0:
-            up = int(up+diff/2)
-            bottom = int(bottom-diff/2)
-        else:
-            up = int(up+(diff/2-0.5))
-            bottom = int(bottom-(diff/2-0.5))
+            left = int(left+diff/2+0.5)
+            right = int(right-diff/2+0.5)
+    #print(left, right, up, bottom)
     return left, right, up, bottom
 
 
-def conversion(f):
-    head, tail = os.path.split(f)
+def landmarks_convert(f, return_rectangle = False, save_img=False):
 
     # load the input image, resize it, and convert it to grayscale
     image = cv2.imread(f)
     height, width = image.shape[:2]
-    for new_width in range(width, 100, -5):
+    for new_width in range(width, 100, -10):
         image = imutils.resize(image, width=new_width)
     
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -147,20 +134,28 @@ def conversion(f):
                 right = max(right_list)
                 up = min(up_list)
                 bottom = max(bottom_list)
-                left, right, up, bottom = firstmodify(left, right, up, bottom, 30)
+                #print("0",left, right, up, bottom)
+                left, right, up, bottom = firstmodify(left, right, up, bottom)
+                #print("1",left, right, up, bottom)
                 left, right, up, bottom = ifoverborder(left, right, up, bottom, width, height)
+                #print("2",left, right, up, bottom)
                 left, right, up, bottom = finalmodify(left, right, up, bottom)
+                #print("3",left, right, up, bottom)
                 #print(left, right, up, bottom)
                 roi = image[up:bottom, left:right]
                 #roi = image[y:y + h, x:x + w]
                 roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
                 output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                outfile = 'output/'+tail
-                cv2.imwrite(outfile,output)
+                if save_img:
+                    head, tail = os.path.split(f)
+                    outfile = 'output/'+tail
+                    cv2.imwrite(outfile,output)
                 # change (96,96) to (1, 96*96)
                 output = output.flatten()
                 #print(len(output))
-                return output
+                if not return_rectangle:
+                    return output
+                return output, [left, right, up, bottom, new_width]
 
 
 def main():
@@ -192,7 +187,7 @@ def main():
         #result.get()
         try:
             temp_output = conversion(f)
-            output_array.append([photo_id, temp_output, emotion.strip().title(), tail])
+            output_array.append([photo_id, temp_output, emotion, tail])
             # if cannot convert, temp_output == None
             if temp_output is None:
                 error_file += f + ': fail to find the front face\n'

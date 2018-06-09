@@ -7,9 +7,9 @@ import brewer2mpl
 import pandas as pd
 import pickle
 #import cv2
-from Utils import load_pkl_data
-from Utils import load_pd_data
-from Utils import load_pd_direct
+#from Utils import load_pkl_data
+#from Utils import load_pd_data
+#from Utils import load_pd_direct
 
 from keras.models import load_model
 
@@ -48,11 +48,11 @@ tf.flags.DEFINE_string(
     help="GRPC URL of the master (e.g. grpc://ip.address.of.tpu:8470). You "
     "must specify either this flag or --tpu_name.")
 
-tf.flags.DEFINE_integer("batch_size", 256,
+tf.flags.DEFINE_integer("batch_size", 64,
                         "Mini-batch size for the computation. Note that this "
                         "is the global batch size and not the per-shard batch.")
 tf.flags.DEFINE_float("learning_rate", 0.05, "Learning rate.")
-tf.flags.DEFINE_string("train_file", "Data/mtrain96.pd", "Path to training data.")
+tf.flags.DEFINE_string("train_file", "Data/", "Path to training data.")
 tf.flags.DEFINE_integer("train_steps", 100000,
                         "Total number of steps. Note that the actual number of "
                         "steps is the next multiple of --iterations greater "
@@ -141,8 +141,8 @@ def input_fn(params):
                 'Disgust':2, 'Fear':3,
                 'Happy':4, 'Neutral':5,
                 'Sad':6, 'Surprise':7}
-
-    with open(FLAGS.train_file, 'rb') as fin:
+    input_file = os.path.join(FLAGS.train_file, 'mtrain96.pd')
+    with open(input_file, 'rb') as fin:
         temp = pickle.load(fin)
 
     features = np.array([list(x) for x in temp["pixels"]])
@@ -155,7 +155,7 @@ def input_fn(params):
     images, labels = dataset.make_one_shot_iterator().get_next()
     return images, labels
 
-
+'''
 def compile_model(model, optimizer, loss='categorical_crossentropy', metrics=['accuracy']):
     model.compile(optimizer=optimizer,
                   loss=loss,
@@ -183,25 +183,50 @@ def predict(model, X_):
     y_pred = model.predict(x = X_)
     cls_pred = np.argmax(y_pred, axis = 1)
     return y_pred, cls_pred
+'''
 
-def main():
+def main(argv):
+    del argv
+    tf.logging.set_verbosity(tf.logging.INFO)
 
-    if FLAGS.master is None and FLAGS.tpu_name is None:
-        raise RuntimeError("You must specify either --master or --tpu_name.")
 
-    if FLAGS.master is not None:
-        if FLAGS.tpu_name is not None:
-        tf.logging.warn("Both --master and --tpu_name are set. Ignoring "
-                      "--tpu_name and using --master.")
-        tpu_grpc_url = FLAGS.master
-    else:
-        tpu_cluster_resolver = (
-            tf.contrib.cluster_resolver.TPUClusterResolver(
-                FLAGS.tpu_name,
-                zone=FLAGS.tpu_zone,
-                project=FLAGS.gcp_project))
-        tpu_grpc_url = tpu_cluster_resolver.get_master()
+    #if FLAGS.master is None and FLAGS.tpu_name is None:
+    #    raise RuntimeError("You must specify either --master or --tpu_name.")
+#
+    #if FLAGS.master is not None:
+    #    if FLAGS.tpu_name is not None:
+    #        tf.logging.warn("Both --master and --tpu_name are set. Ignoring "
+    #                  "--tpu_name and using --master.")
+    #    tpu_grpc_url = FLAGS.master
+    #else:
+    #    tpu_cluster_resolver = (
+    #        tf.contrib.cluster_resolver.TPUClusterResolver(
+    #            FLAGS.tpu_name,
+    #            zone=FLAGS.tpu_zone,
+    #            project=FLAGS.gcp_project))
+    #    tpu_grpc_url = tpu_cluster_resolver.get_master()
 
+    tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
+        FLAGS.tpu_name, zone=FLAGS.tpu_zone, project=FLAGS.gcp_project)
+
+    run_config = tf.contrib.tpu.RunConfig(
+        cluster=tpu_cluster_resolver,
+        model_dir=FLAGS.model_dir,
+        save_checkpoints_secs=3600,
+        session_config=tf.ConfigProto(
+            allow_soft_placement=True, log_device_placement=True),
+        tpu_config=tf.contrib.tpu.TPUConfig(FLAGS.iterations_per_loop, FLAGS.num_shards))
+
+    estimator = tf.contrib.tpu.TPUEstimator(
+        model_fn=model_fn,
+        use_tpu=FLAGS.use_tpu,
+        train_batch_size=FLAGS.batch_size,
+        eval_batch_size=FLAGS.batch_size,
+        params={"data_dir": FLAGS.train_file},
+        config=run_config)
+
+    estimator.train(input_fn=input_fn, max_steps=FLAGS.train_steps)
+'''
     run_config = tpu_config.RunConfig(
         master=tpu_grpc_url,
         model_dir=FLAGS.model_dir,
@@ -219,10 +244,11 @@ def main():
         config=run_config,
         train_batch_size=FLAGS.batch_size)
     estimator.train(input_fn=input_fn, max_steps=FLAGS.train_steps)
+'''
 
 
 if __name__ == "__main__":
-    tf.logging.set_verbosity(tf.logging.INFO)
+    # tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run(main)
 
 
