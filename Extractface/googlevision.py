@@ -4,6 +4,7 @@ import argparse
 from PIL import Image, ImageDraw
 from landmarks import firstmodify, ifoverborder, finalmodify
 import cv2
+import os
 client = vision.ImageAnnotatorClient()
 
 
@@ -64,7 +65,7 @@ def google_convert(input_filename, max_results=4, return_rectangle=False, save_i
         #print("0",left, right, up, bottom)
         image = cv2.imread(input_filename)
         (h, w) = image.shape[:2]
-        left, right, up, bottom = firstmodify(left, right, up, bottom)
+        left, right, up, bottom = firstmodify(left, right, up, bottom, 10)
         #print("1",left, right, up, bottom)
         left, right, up, bottom = ifoverborder(left, right, up, bottom, w, h)
         #print("2",left, right, up, bottom)
@@ -74,7 +75,7 @@ def google_convert(input_filename, max_results=4, return_rectangle=False, save_i
         roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
         output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         if save_img:
-            head, tail = os.path.split(f)
+            head, tail = os.path.split(input_filename)
             outfile = 'output/' + tail
             cv2.imwrite(outfile, output)
         temp_output = output.flatten()
@@ -82,6 +83,47 @@ def google_convert(input_filename, max_results=4, return_rectangle=False, save_i
             return temp_output, [left, right, up, bottom, w]
         else:
             return temp_output
+
+def google_convert_multi(input_filename, max_results=4, return_rectangle=False, save_img=False):
+    temp_output, rectangle_list = [], []
+    with open(input_filename, 'rb') as image:
+        faces = detect_face(image, max_results)
+        print('Found {} face{}'.format(
+            len(faces), '' if len(faces) == 1 else 's'))
+        count = 0
+
+       #print('Writing to file {}'.format(output_filename))
+        # Reset the file pointer, so we can read the file again
+        for face in faces:
+            count += 1
+            x = [vertex.x for vertex in face.bounding_poly.vertices]
+            y = [vertex.y for vertex in face.bounding_poly.vertices]
+            left = min(x)
+            right = max(x)
+            up = min(y)
+            bottom = max(y)
+            #print("0",left, right, up, bottom)
+            image = cv2.imread(input_filename)
+            (h, w) = image.shape[:2]
+            left, right, up, bottom = firstmodify(left, right, up, bottom, 10)
+            #print("1",left, right, up, bottom)
+            left, right, up, bottom = ifoverborder(left, right, up, bottom, w, h)
+            #print("2",left, right, up, bottom)
+            left, right, up, bottom = finalmodify(left, right, up, bottom)
+            #print("3",left, right, up, bottom)
+            roi = image[up:bottom, left:right]
+            roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
+            output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+            if save_img:
+                head, tail = os.path.split(input_filename)
+                outfile = 'output/' + str(count) + '-' + tail
+                cv2.imwrite(outfile, output)
+            temp_output.append(output.flatten())
+            rectangle_list.append([left, right, up, bottom, w])
+    if return_rectangle:
+        return temp_output, rectangle_list
+    else:
+        return temp_output
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

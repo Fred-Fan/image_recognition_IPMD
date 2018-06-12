@@ -17,7 +17,7 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 
-def firstmodify(left, right, up, bottom, margin_perc=30):
+def firstmodify(left, right, up, bottom, margin_perc=20):
     """
     This function is to make a square images based on the facemark + margin.
 

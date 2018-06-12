@@ -156,6 +156,51 @@ def deep_convert(f, return_rectangle = False, save_img=False):
                 if return_rectangle:
                     return temp_output, [left, right, up, bottom, w]
                 return temp_output
+
+def deep_convert_multi(f, return_rectangle = False, save_img=False):
+    temp_output, rectangle_list = [], []
+    image = cv2.imread(f)
+
+    (h, w) = image.shape[:2]
+    blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 1.0,
+        (300, 300), (104.0, 177.0, 123.0))
+
+    net.setInput(blob)
+    detections = net.forward()
+    count = 0
+    for i in range(0, detections.shape[2]):
+        count += 1
+        confidence = detections[0, 0, i, 2]
+        if confidence > 0.5:
+            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+            len = detections[0, 0, i, 3:7]
+
+            if len[3] < 1:
+                (startX, startY, endX, endY) = box.astype("int")
+                startX = max(startX, 0)
+                startY = max(startY, 0)
+                #print(startX, startY)
+                left, right, up, bottom = firstmodify(startX, endX, startY, endY)
+                #print("1",left, right, up, bottom)
+                left, right, up, bottom = ifoverborder(left, right, up, bottom, w, h)
+                #print("2",left, right, up, bottom)
+                left, right, up, bottom = finalmodify(left, right, up, bottom)
+                #print("3",left, right, up, bottom)
+                #print(left, right, up, bottom)
+                roi = image[up:bottom, left:right]
+                #roi = image[startY:endY, startX:endX]
+                roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
+                output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                if save_img:
+                    head, tail = os.path.split(f)
+                    outfile = 'output/' + str(count) + '-' + tail
+                    cv2.imwrite(outfile, output)
+
+                temp_output.append(output.flatten())
+                rectangle_list.append([left, right, up, bottom, w])
+    if return_rectangle:
+        return temp_output, rectangle_list
+    return temp_output
 # [START def_main]
 def convert(input_filepath, output_filename, max_results):
 
