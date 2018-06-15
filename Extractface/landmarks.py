@@ -175,6 +175,74 @@ def landmarks_convert(f, return_rectangle = False, save_img=False):
                 return output, [left, right, up, bottom, new_width]
 
 
+def landmarks_convert_multi(f, return_rectangle = False, save_img=False):
+    temp_output, rectangle_list = [], []
+    # load the input image, resize it, and convert it to grayscale
+    image = cv2.imread(f)
+    height, width = image.shape[:2]
+    for new_width in range(width, 100, -10):
+        image = imutils.resize(image, width=new_width)
+    
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+        # detect faces in the grayscale image
+        rects = detector(gray, 1)
+        for (i, rect) in enumerate(rects):
+            # determine the facial landmarks for the face region, then
+            # convert the landmark (x, y)-coordinates to a NumPy array
+            try:
+                print(rect[0])
+                continue
+            except TypeError:
+                #print(new_width)
+                shape = predictor(gray, rect)
+                shape = face_utils.shape_to_np(shape)
+                left_list = []
+                right_list = []
+                up_list = []
+                bottom_list = []
+                #for (i, rect) in enumerate(rects):
+                    # determine the facial landmarks for the face region, then
+                    # convert the landmark (x, y)-coordinates to a NumPy array
+                #shape = predictor(gray, rect)
+                #shape = face_utils.shape_to_np(shape)
+                for (name, (i, j)) in face_utils.FACIAL_LANDMARKS_IDXS.items():
+                    (x, y, w, h) = cv2.boundingRect(np.array([shape[i:j]]))
+                    left_list.append(x)
+                    right_list.append(x+w)
+                    up_list.append(y)
+                    bottom_list.append(y+h)
+                left = min(left_list)
+                right = max(right_list)
+                up = min(up_list)
+                bottom = max(bottom_list)
+                #print("0",left, right, up, bottom)
+                left, right, up, bottom = firstmodify(left, right, up, bottom)
+                #print("1",left, right, up, bottom)
+                left, right, up, bottom = ifoverborder(left, right, up, bottom, width, height)
+                #print("2",left, right, up, bottom)
+                left, right, up, bottom = finalmodify(left, right, up, bottom)
+                #print("3",left, right, up, bottom)
+                #print(left, right, up, bottom)
+                roi = image[up:bottom, left:right]
+                #roi = image[y:y + h, x:x + w]
+                roi = cv2.resize(roi, (200,200), interpolation = cv2.INTER_AREA)
+                output = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                if save_img:
+                    head, tail = os.path.split(f)
+                    outfile = 'output/'+tail
+                    cv2.imwrite(outfile,output)
+                # change (96,96) to (1, 96*96)
+                temp_output.append(output.flatten())
+                rectangle_list.append([left, right, up, bottom, new_width])
+                #print(len(output))
+        break
+    if return_rectangle:
+        return temp_output, rectangle_list
+    else:
+        return temp_output
+
+
 def main():
     # set mulit-process number, equal to the number of cores
     # process_number = 1
